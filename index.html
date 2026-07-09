@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Inquest — Reconstruct the Line</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f2ecdd;--paper-shade:#e9e1cd;--ink:#1c1813;--ink-soft:#4a4237;
+    --ink-faint:#7a7161;--rule:#c3b598;--rule-strong:#8f8368;--red:#9a2b1c;
+    --green:#3f6b3a;--measure:600px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:"Newsreader",Georgia,serif;font-optical-sizing:auto;
+    font-feature-settings:"onum" 1,"liga" 1;line-height:1.5;
+    display:flex;flex-direction:column;align-items:center;padding:0 1rem 4rem;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(0,0,0,0.015), transparent 60%),
+      radial-gradient(circle at 85% 80%, rgba(0,0,0,0.02), transparent 55%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+  .sheet{width:100%;max-width:var(--measure)}
+  .masthead{text-align:center;padding:1.6rem 0 0.4rem}
+  .masthead .kicker{font-size:0.66rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--ink-soft);font-weight:500}
+  .nameplate{font-family:"UnifrakturCook",serif;font-weight:700;font-size:clamp(2.9rem,13vw,4.6rem);line-height:0.95;margin:0.2rem 0 0.1rem}
+  .masthead .strap{font-family:"Playfair Display",serif;font-style:italic;font-size:1rem;color:var(--ink-soft)}
+  .rule-heavy{border:0;border-top:3px double var(--rule-strong);margin:0.7rem 0 0.25rem}
+  .rule-thin{border:0;border-top:1px solid var(--rule);margin:0.25rem 0}
+  .furniture{display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.3rem;font-size:0.64rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-faint);padding:0.3rem 0.1rem 0}
+
+  .lead{padding:1.3rem 0 0.4rem}
+  .headline{font-family:"Playfair Display",serif;font-weight:900;font-size:clamp(1.6rem,6vw,2.3rem);line-height:1.08;text-align:center;margin-bottom:0.5rem}
+  .deck{font-style:italic;color:var(--ink-soft);text-align:center;font-size:1.02rem;max-width:34em;margin:0 auto 0.8rem}
+  .rules{font-size:0.9rem;color:var(--ink-soft);text-align:center;max-width:36em;margin:0 auto}
+  .rules b{color:var(--ink)}
+  .smallcaps{font-variant:small-caps;letter-spacing:0.03em}
+
+  .engine{border:1.5px solid var(--ink);background:linear-gradient(var(--paper-shade),var(--paper));padding:1.1rem 1.1rem 1.3rem;margin:1.3rem 0;box-shadow:2px 3px 0 rgba(28,24,19,0.08)}
+  .scoreline{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);padding-bottom:0.5rem;margin-bottom:0.9rem;font-size:0.7rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .scoreline .total{font-family:"Playfair Display",serif;font-weight:700;font-size:1.1rem;letter-spacing:0;color:var(--ink);text-transform:none}
+
+  .stem-label{font-size:0.6rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:0.3rem}
+  .stem{font-size:1.24rem;line-height:1.6;border-left:2px solid var(--rule-strong);padding:0.2rem 0 0.2rem 0.8rem;margin-bottom:0.9rem}
+  .stem .blank{color:var(--red);font-weight:600;border-bottom:2px solid var(--red);padding:0 0.5rem}
+
+  .answer-row{display:flex;gap:0.5rem;align-items:stretch;flex-wrap:wrap}
+  .answer-input{flex:1;min-width:11rem;background:rgba(255,255,255,0.4);border:1px solid var(--rule);font-family:inherit;font-size:1.1rem;color:var(--ink);padding:0.5rem 0.7rem}
+  .answer-input:focus{outline:none;border-color:var(--ink-soft)}
+  button.press{font-family:"Newsreader",serif;font-weight:500;font-size:0.82rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.55rem 1rem;background:var(--ink);color:var(--paper);border:1.5px solid var(--ink);cursor:pointer;transition:background 0.15s,color 0.15s}
+  button.press:hover:not(:disabled){background:var(--red);border-color:var(--red)}
+  button.press.ghost{background:transparent;color:var(--ink)}
+  button.press.ghost:hover:not(:disabled){background:var(--ink);color:var(--paper)}
+  button.press:disabled{opacity:0.35;cursor:not-allowed}
+  button.press.wide{width:100%;margin-top:0.9rem}
+
+  /* reveal */
+  .reveal{margin-top:0.4rem;display:none}
+  .reveal.show{display:block}
+  .completed{font-size:1.18rem;line-height:1.6;margin:0.2rem 0 1rem;border-left:2px solid var(--rule-strong);padding:0.2rem 0 0.2rem 0.8rem}
+  .completed .fixed{color:var(--ink)}
+  .completed .pick{color:var(--red);font-weight:600}
+  .round-score{display:flex;align-items:baseline;gap:0.6rem;justify-content:center;margin-bottom:0.1rem}
+  .round-score .n{font-family:"Playfair Display",serif;font-weight:900;font-size:2.9rem;line-height:1;color:var(--ink)}
+  .round-score .of{font-size:0.9rem;color:var(--ink-faint)}
+  .round-verdict{text-align:center;font-family:"Playfair Display",serif;font-style:italic;font-weight:700;font-size:1.15rem;margin-bottom:0.9rem}
+  .round-verdict.good{color:var(--green)}
+  .round-verdict.mid{color:var(--ink-soft)}
+  .round-verdict.low{color:var(--ink-faint)}
+  .round-verdict.wild{color:var(--red)}
+  .expected{text-align:center;margin-bottom:0.5rem}
+  .expected .lab{font-size:0.58rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint);display:block;margin-bottom:0.4rem}
+  .chip{display:inline-block;font-size:1rem;padding:0.12rem 0.55rem;margin:0.15rem;border:1px solid var(--rule);background:rgba(255,255,255,0.35);border-radius:2px;white-space:pre}
+  .yourword{text-align:center;font-size:0.9rem;color:var(--ink-soft);margin-top:0.5rem}
+  .yourword b{color:var(--ink)}
+
+  /* results */
+  .results{text-align:center;display:none}
+  .results.show{display:block}
+  .results .big{font-family:"Playfair Display",serif;font-weight:900;font-size:4rem;line-height:1;color:var(--ink)}
+  .results .of{font-size:1rem;color:var(--ink-faint);margin-bottom:0.3rem}
+  .results .rgrade{font-family:"Playfair Display",serif;font-style:italic;font-weight:700;font-size:1.3rem;color:var(--red);margin:0.5rem 0 0.4rem}
+  .results .rnote{font-size:0.95rem;color:var(--ink-soft);max-width:32em;margin:0 auto 1rem}
+  .results .breakdown{list-style:none;font-size:0.92rem;color:var(--ink-soft);max-width:34em;margin:0 auto 1rem;text-align:left}
+  .results .breakdown li{display:flex;justify-content:space-between;border-bottom:1px dotted var(--rule);padding:0.3rem 0;gap:1rem}
+  .results .breakdown li .w{color:var(--red);font-weight:600}
+  .results .breakdown li .s{font-variant-numeric:tabular-nums;color:var(--ink)}
+
+  .press-status{display:flex;align-items:center;gap:0.5rem;justify-content:center;font-size:0.66rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-faint);padding:0.8rem 0 0.2rem}
+  .press-status .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint)}
+  .dot.loading{background:var(--red);animation:pulse 1s infinite}
+  .dot.ready{background:var(--green)}
+  .dot.error{background:var(--red)}
+  .dot.thinking{background:var(--red);animation:pulse 0.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+  .press-bar{height:2px;background:var(--rule);overflow:hidden;margin:0.2rem 0}
+  .press-bar>span{display:block;height:100%;width:0;background:var(--red);transition:width 0.3s}
+  .press-note{text-align:center;font-size:0.68rem;color:var(--ink-faint);font-style:italic}
+
+  .gloss{margin-top:1.6rem;column-gap:1.6rem}
+  .gloss h3{font-family:"Playfair Display",serif;font-weight:700;font-size:1.05rem;border-bottom:1px solid var(--rule);padding-bottom:0.2rem;margin-bottom:0.4rem}
+  .gloss p{font-size:0.9rem;color:var(--ink-soft);margin-bottom:0.7rem;text-align:justify;hyphens:auto}
+  .gloss a{color:var(--ink-soft)}
+  .gloss > div{break-inside:avoid}
+  .colophon{margin-top:1.8rem;border-top:3px double var(--rule-strong);padding-top:0.7rem;font-size:0.68rem;color:var(--ink-faint);text-align:center;line-height:1.7}
+  .colophon a{color:var(--ink-faint)}
+  @media(min-width:560px){ .gloss{column-count:2} }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div class="kicker">A Companion to The AI Interviews · Illustrated Enquiry</div>
+    <h1 class="nameplate">The Inquest</h1>
+    <div class="strap">Given only the machine's bets, reconstruct the line that provoked them</div>
+  </div>
+  <hr class="rule-heavy">
+  <div class="furniture">
+    <span>Vol. I · No. 4</span>
+    <span id="edition-date">Late Edition</span>
+    <span>Stake: Five Readings</span>
+  </div>
+  <hr class="rule-thin">
+
+  <div class="lead">
+    <h2 class="headline">Work Backwards From the Bets</h2>
+    <p class="deck">The machine has read a hidden line and published its bets on the next word. Write a line of your own that would drive it to the same bets.</p>
+    <p class="rules">You need not find the original &mdash; <b>any line that steers the machine to the same words pays</b>. Your line is read live, on this device, the moment you submit it; its bets are set beside the hidden line's, and the closer the two columns, the more you score.</p>
+  </div>
+
+  <div class="engine">
+    <div class="scoreline">
+      <span id="round-label">Reading — of 5</span>
+      <span class="total" id="total">0 pts</span>
+    </div>
+
+    <!-- PLAY -->
+    <div id="play">
+      <div class="stem-label">The machine's bets on a hidden line</div>
+      <div class="expected" style="text-align:left;margin-bottom:0.9rem">
+        <div id="clue-chips"></div>
+      </div>
+      <div class="stem-label">Your line — leave it unfinished</div>
+      <div class="answer-row">
+        <input class="answer-input" id="answer" type="text" placeholder="e.g. The old sailor stared out at the" autocomplete="off" spellcheck="false" disabled>
+        <button class="press" id="play-btn" disabled>Read it</button>
+      </div>
+    </div>
+
+    <!-- REVEAL -->
+    <div class="reveal" id="reveal">
+      <div class="stem-label">The hidden line was</div>
+      <div class="completed" id="completed"></div>
+      <div class="round-score"><span class="n" id="round-n">0</span><span class="of">/ 100</span></div>
+      <div class="round-verdict" id="round-verdict"></div>
+      <div class="expected">
+        <span class="lab">The hidden line was betting on</span>
+        <div id="chips-hidden"></div>
+      </div>
+      <div class="expected">
+        <span class="lab">Your line bets on</span>
+        <div id="chips-player"></div>
+      </div>
+      <button class="press wide" id="next-btn">Next reading</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+      <div class="big" id="final-n">0</div>
+      <div class="of">out of 500</div>
+      <div class="rgrade" id="final-grade"></div>
+      <div class="rnote" id="final-note"></div>
+      <ul class="breakdown" id="breakdown"></ul>
+      <button class="press wide" id="again-btn">Play again</button>
+    </div>
+
+    <div class="press-status">
+      <span class="dot loading" id="dot"></span>
+      <span id="status-text">warming the presses</span>
+    </div>
+    <div class="press-bar"><span id="press-bar-fill"></span></div>
+    <div class="press-note" id="press-note">a small on-device press · weights load once, then cache</div>
+  </div>
+
+  <div class="gloss">
+    <div>
+      <h3>How a reading is scored</h3>
+      <p>Your line is run through the machine and its odds on the next word are set beside the hidden line's. The score is the share of the machine's ten favourite bets that your line reproduces, word by word, each capped at what the hidden line itself staked. Reproduce the whole book and score 100; send the machine somewhere else entirely and score nothing.</p>
+    </div>
+    <div>
+      <h3>Why the original is not required</h3>
+      <p>Countless different lines drive the machine to the same bets &mdash; a graveyard, a haunted house and a séance all summon <em>ghost</em>. The machine's odds are a function of meaning in bulk, not of exact words, so the game scores the destination, not the route. Finding <em>any</em> line that lands there is the whole skill.</p>
+    </div>
+    <div>
+      <h3>The live sheet</h3>
+      <p>Unlike its companion games, this one cannot be prepared in advance: your line does not exist until you write it, so every reading is a fresh forward pass of the model, on your device, at the moment you press the button. The hidden lines' bets are set once at warm-up; yours are set live, every round.</p>
+    </div>
+    <div>
+      <h3>The honest caveat</h3>
+      <p>A 360-million-parameter model, tuned to sound like an assistant, sets these odds &mdash; so its bets are rough and a little assistant-flavoured. A high score means your line and the hidden one read alike <em>to this machine</em>; the great models might disagree. Nothing typed here leaves the browser.</p>
+    </div>
+  </div>
+
+  <div class="colophon">
+    Odds set on-device by <span class="smallcaps">SmolLM2-360M-Instruct</span> via
+    <a href="https://huggingface.co/docs/transformers.js" target="_blank" rel="noopener">Transformers.js</a>.
+    No text leaves this browser · no API is called.<br>
+    A companion sheet to <em>The AI Interviews</em>.
+  </div>
+
+</div>
+
+<!-- ══ THE PRESS ENGINE ══
+     Same architecture as The Wager: one module source, run in a worker where the
+     worker has WebGPU (desktop) or on the main thread where only the page does
+     (iOS/WebKit). Hidden lines are scored at warm-up; the model is then KEPT ALIVE,
+     because every player guess is a novel input needing a fresh forward pass. -->
+<script id="engine-src" type="text/js-engine">
+import { AutoModelForCausalLM, AutoTokenizer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.0/dist/transformers.min.js';
+
+const MODEL_ID = 'HuggingFaceTB/SmolLM2-360M-Instruct';
+const TOP_SHOW = 5;    // chips shown per column
+const TOP_JUDGE = 10;  // hidden bets counted in the score
+let tokenizer = null, model = null;
+const rows = new Map();   // stem → Float32Array logit row
+
+export async function probeGPU(){
+  try{ if(!navigator.gpu) return false;
+    const a = await navigator.gpu.requestAdapter();
+    return !!a;
+  }catch(e){ return false; }
+}
+async function hasFp16(){
+  try{ const a = await navigator.gpu.requestAdapter();
+    return !!a && a.features.has('shader-f16');
+  }catch(e){ return false; }
+}
+
+export async function loadModel(onProgress){
+  const cb = p=>{
+    if(p.status==='downloading'||p.status==='loading'||p.status==='progress')
+      onProgress({progress:p.progress||0, file:p.file||'', loaded:p.loaded||0, total:p.total||0});
+  };
+  tokenizer = tokenizer || await AutoTokenizer.from_pretrained(MODEL_ID, {progress_callback:cb});
+  if(await probeGPU()){
+    try{
+      model = await AutoModelForCausalLM.from_pretrained(MODEL_ID,
+        { dtype:(await hasFp16())?'q4f16':'q4', device:'webgpu', progress_callback:cb });
+      return 'webgpu';
+    }catch(e1){
+      try{ if(model && model.dispose) await model.dispose(); }catch(e){}
+      model = null;
+    }
+  }
+  model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, { dtype:'q4', progress_callback:cb });
+  return 'wasm';
+}
+
+async function lastRow(text){
+  let out=null, inputs=null;
+  try{
+    inputs = await tokenizer(text);
+    out = await model(inputs);
+    const logits = out.logits, seq = logits.dims[1], vocab = logits.dims[2];
+    const base = (seq-1)*vocab;
+    return Float32Array.prototype.slice.call(logits.data, base, base+vocab);
+  }finally{
+    try{ for(const t of Object.values(out ?? {})) t?.dispose?.(); }catch(e){}
+    try{ for(const t of Object.values(inputs ?? {})) t?.dispose?.(); }catch(e){}
+  }
+}
+
+export async function computeRows(stems, onStem){
+  for(let i=0;i<stems.length;i++){
+    rows.set(stems[i], await lastRow(stems[i]));
+    if(onStem) onStem(i+1, stems.length);
+  }
+}
+
+function safeDecode(id){
+  try{ return tokenizer.decode([id], {skip_special_tokens:false}); }catch(e){ return ''; }
+}
+
+// softmax a logit row → normalised exp buffer + partition sum
+function soft(row){
+  const n=row.length;
+  let max=-Infinity;
+  for(let i=0;i<n;i++){ if(row[i]>max) max=row[i]; }
+  const exps=new Float32Array(n); let sum=0;
+  for(let i=0;i<n;i++){ const e=Math.exp(row[i]-max); exps[i]=e; sum+=e; }
+  return {exps, sum};
+}
+function topIds(exps, K){
+  const idx=new Array(K).fill(-1), val=new Array(K).fill(-Infinity);
+  for(let i=0;i<exps.length;i++){
+    const v=exps[i];
+    if(v>val[K-1]){
+      let k=K-1;
+      while(k>0 && v>val[k-1]){ val[k]=val[k-1]; idx[k]=idx[k-1]; k--; }
+      val[k]=v; idx[k]=i;
+    }
+  }
+  return idx.filter(i=>i>=0);
+}
+
+// the clue for a hidden stem: its top chips, no inference needed
+export async function clueFor(stem, K){
+  const row = rows.get(stem);
+  if(!row) throw new Error('no row for stem');
+  const {exps,sum} = soft(row);
+  return topIds(exps, K).map(id=>({ text:safeDecode(id), p:exps[id]/sum }));
+}
+
+// score the player's line against a hidden stem's cached row
+export async function scoreGuess(stem, line){
+  const hRow = rows.get(stem);
+  if(!hRow) throw new Error('no row for stem');
+  const pRow = await lastRow(line);          // the live forward pass
+  const H = soft(hRow), P = soft(pRow);
+  const judged = topIds(H.exps, TOP_JUDGE);
+  let hMass=0, cover=0;
+  for(const id of judged){
+    const ph = H.exps[id]/H.sum, pp = P.exps[id]/P.sum;
+    hMass += ph;
+    cover += Math.min(ph, pp);
+  }
+  const pts = Math.round(100 * (hMass>0 ? cover/hMass : 0));
+  const topHidden = judged.slice(0,TOP_SHOW).map(id=>({ text:safeDecode(id), p:H.exps[id]/H.sum }));
+  const topPlayer = topIds(P.exps, TOP_SHOW).map(id=>({ text:safeDecode(id), p:P.exps[id]/P.sum }));
+  return { pts, topHidden, topPlayer };
+}
+</script>
+
+<script type="module">
+const ROUNDS = 5;
+const CLUE_K = 3;
+
+const STEMS = [
+  'The lighthouse keeper lit the lamp and watched the',
+  'She opened the letter and immediately began to',
+  'He tasted the soup, frowned, and reached for the',
+  'The city at midnight smelled of rain and',
+  'Nobody had warned her that the forest was full of',
+  "The old man's advice was simple: never trust a",
+  'After the fire, the town rebuilt everything except the',
+  'The child pointed at the sky and asked why the',
+  'My grandmother kept her fiercest secrets inside a',
+  'The last thing anyone expected to find in the attic was a',
+  'When the music finally stopped, the whole room began to',
+  'The detective knew the culprit the moment she noticed the',
+  'They say the mountain is haunted by the ghost of a',
+  'He signed the contract, then very quietly pocketed the',
+  'The recipe called for flour, sugar, and a generous pinch of',
+];
+
+const $ = id => document.getElementById(id);
+const dot=$('dot'), statusText=$('status-text'), barFill=$('press-bar-fill'), pressNote=$('press-note');
+const clueChips=$('clue-chips'), answerEl=$('answer'), playBtn=$('play-btn');
+const playPane=$('play'), revealPane=$('reveal'), resultsPane=$('results');
+const roundLabel=$('round-label'), totalEl=$('total');
+const completedEl=$('completed'), roundN=$('round-n'), roundVerdict=$('round-verdict');
+const chipsHidden=$('chips-hidden'), chipsPlayer=$('chips-player'), nextBtn=$('next-btn'), againBtn=$('again-btn');
+const finalN=$('final-n'), finalGrade=$('final-grade'), finalNote=$('final-note'), breakdownEl=$('breakdown');
+
+let deck=[], idx=0, total=0, log=[];
+let ready=false, scoring=false;
+
+try{ $('edition-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }catch(e){}
+function setStatus(s,t){ dot.className='dot '+s; statusText.textContent=t; }
+
+function verdictFor(pts){
+  if(pts>=80) return ['good','A clean reading — your line and the hidden one are one groove.'];
+  if(pts>=55) return ['good','Warm. The machine hears a family resemblance.'];
+  if(pts>=30) return ['mid','A scent of it — some of the same words surface.'];
+  if(pts>=10) return ['low','Cold. Your line sends the machine elsewhere.'];
+  return ['wild','Stone cold — two different worlds.'];
+}
+
+/* engine-over-worker vs engine-local, as in The Wager */
+const engineSrc = document.getElementById('engine-src').textContent;
+const workerGlue = `
+onmessage = async (e)=>{
+  const m = e.data;
+  try{
+    if(m.type==='probe'){ postMessage({type:'probe', gpu: await probeGPU()}); }
+    else if(m.type==='load'){
+      const backend = await loadModel(p=>postMessage({type:'progress', ...p}));
+      postMessage({type:'loaded', backend});
+    }
+    else if(m.type==='rows'){
+      await computeRows(m.stems, (done,total)=>postMessage({type:'rowp', done, total}));
+      postMessage({type:'rows-done'});
+    }
+    else if(m.type==='clue'){
+      const chips = await clueFor(m.stem, m.k);
+      postMessage({type:'clue', chips});
+    }
+    else if(m.type==='guess'){
+      const r = await scoreGuess(m.stem, m.line);
+      postMessage({type:'result', ...r});
+    }
+  }catch(err){
+    postMessage({type:'fail', where:m.type, message:String(err && err.message || err)});
+  }
+};`;
+
+function makeWorkerPress(){
+  const worker = new Worker(
+    URL.createObjectURL(new Blob([engineSrc + workerGlue], {type:'text/javascript'})),
+    {type:'module'}
+  );
+  const waiters = {};
+  const failMap = { guess:'result', rows:'rows-done', probe:'probe', load:'loaded', clue:'clue' };
+  worker.onmessage = (e)=>{
+    const m = e.data;
+    if(m.type==='progress'){ handlers.progress && handlers.progress(m); return; }
+    if(m.type==='rowp'){ handlers.rowp && handlers.rowp(m.done, m.total); return; }
+    if(m.type==='fail'){
+      const key = failMap[m.where] || 'loaded';
+      if(waiters[key]){ const w=waiters[key]; delete waiters[key]; w.reject(new Error(m.message)); }
+      return;
+    }
+    if(waiters[m.type]){ const w=waiters[m.type]; delete waiters[m.type]; w.resolve(m); }
+  };
+  worker.onerror = (e)=>{
+    for(const k of Object.keys(waiters)){ waiters[k].reject(new Error('worker error: '+(e.message||''))); delete waiters[k]; }
+  };
+  const handlers = {};
+  function ask(sendMsg, replyType, timeoutMs){
+    return new Promise((resolve,reject)=>{
+      waiters[replyType] = {resolve, reject};
+      if(timeoutMs) setTimeout(()=>{ if(waiters[replyType]){ delete waiters[replyType]; reject(new Error('timeout')); } }, timeoutMs);
+      worker.postMessage(sendMsg);
+    });
+  }
+  return {
+    probe: ()=>ask({type:'probe'}, 'probe', 30000).then(m=>m.gpu),
+    load: (onProgress)=>{ handlers.progress=onProgress; return ask({type:'load'}, 'loaded').then(m=>m.backend); },
+    computeRows: (stems,onStem)=>{ handlers.rowp=onStem; return ask({type:'rows', stems}, 'rows-done'); },
+    clueFor: (stem,k)=>ask({type:'clue', stem, k}, 'clue').then(m=>m.chips),
+    scoreGuess: (stem,line)=>ask({type:'guess', stem, line}, 'result'),
+    terminate: ()=>worker.terminate(),
+  };
+}
+
+async function makeMainPress(){
+  const mod = await import(URL.createObjectURL(new Blob([engineSrc], {type:'text/javascript'})));
+  return {
+    probe: ()=>mod.probeGPU(),
+    load: (onProgress)=>mod.loadModel(onProgress),
+    computeRows: (stems,onStem)=>mod.computeRows(stems,onStem),
+    clueFor: (stem,k)=>mod.clueFor(stem,k),
+    scoreGuess: (stem,line)=>mod.scoreGuess(stem,line),
+    terminate: ()=>{},
+  };
+}
+
+let press = null;
+
+function onProgress(m){
+  barFill.style.width = Math.round(m.progress||0)+'%';
+  if(m.file) pressNote.textContent = 'setting '+m.file.split('/').pop()+
+    (m.total?` — ${(m.loaded/1e6).toFixed(0)} of ${(m.total/1e6).toFixed(0)} MB`:'');
+}
+
+async function boot(){
+  setStatus('loading','warming the presses');
+  try{
+    let mainGPU = false;
+    try{ mainGPU = !!navigator.gpu && !!(await navigator.gpu.requestAdapter()); }catch(e){}
+    let workerPress = null, workerGPU = false;
+    try{
+      workerPress = makeWorkerPress();
+      workerGPU = await workerPress.probe();
+    }catch(e){ console.warn('worker unavailable', e); }
+
+    if(workerPress && (workerGPU || !mainGPU)){
+      press = workerPress;
+    }else{
+      if(workerPress) workerPress.terminate();
+      press = await makeMainPress();
+    }
+
+    const backend = await press.load(onProgress);
+    barFill.style.width='100%';
+
+    setStatus('loading','reading the hidden lines');
+    await press.computeRows(STEMS, (done,total)=>{
+      pressNote.textContent = `reading the hidden lines — ${done} of ${total}`;
+      barFill.style.width = Math.round(100*done/total)+'%';
+    });
+
+    const home = (backend==='webgpu') ? 'fast press (GPU)' : 'slow press (WASM)';
+    pressNote.textContent = `press ready · ${home} · the press stays lit — every reading is live`;
+    setStatus('ready','ready');
+    ready = true;
+    newGame();
+  }catch(err){
+    console.error(err);
+    setStatus('error','the wire is down');
+    pressNote.textContent='';
+    clueChips.textContent='The wire is down — this browser cannot run the on-device press. Try Chrome or Edge on desktop.';
+  }
+}
+
+function chipEls(target, chips){
+  target.replaceChildren();
+  chips.forEach(c=>{
+    const chip=document.createElement('span'); chip.className='chip';
+    chip.textContent = c.text.replace(/\n/g,'⏎') + '  ' + (c.p*100).toFixed(0)+'%';
+    target.appendChild(chip);
+  });
+}
+
+async function presentClue(){
+  roundLabel.textContent = `Reading ${idx+1} of ${ROUNDS}`;
+  totalEl.textContent = total+' pts';
+  answerEl.value=''; answerEl.disabled=true; playBtn.disabled=true;
+  playPane.style.display='block';
+  clueChips.textContent='…';
+  try{
+    const chips = await press.clueFor(deck[idx], CLUE_K);
+    chipEls(clueChips, chips);
+  }catch(e){ console.error(e); clueChips.textContent='(the clue could not be set)'; }
+  answerEl.disabled=false; playBtn.disabled=false;
+  answerEl.focus();
+}
+
+async function readIt(){
+  if(scoring || !ready) return;
+  const line = answerEl.value.trim();
+  if(line.split(/\s+/).length < 3){ answerEl.focus(); return; }   // a line, not a word
+  scoring=true; playBtn.disabled=true; answerEl.disabled=true;
+  setStatus('thinking','the machine is reading your line');
+  const stem = deck[idx];
+  try{
+    const r = await press.scoreGuess(stem, line);
+    const [cls, text] = verdictFor(r.pts);
+    total += r.pts;
+    log.push({ stem, line, pts:r.pts });
+    showReveal(stem, r.pts, cls, text, r);
+    setStatus('ready','ready');
+  }catch(err){
+    console.error(err);
+    setStatus('error','the type is jammed');
+    showReveal(stem, 0, 'wild', 'The type jammed on that one — no reading recorded.', {topHidden:[],topPlayer:[]});
+  }finally{
+    scoring=false;
+  }
+}
+
+function showReveal(stem, pts, cls, text, r){
+  playPane.style.display='none';
+  totalEl.textContent = total+' pts';
+  completedEl.textContent = stem+' …';
+  roundN.textContent = pts;
+  roundVerdict.className = 'round-verdict '+cls;
+  roundVerdict.textContent = text;
+  chipEls(chipsHidden, r.topHidden);
+  chipEls(chipsPlayer, r.topPlayer);
+  nextBtn.textContent = (idx>=ROUNDS-1) ? 'See the tally' : 'Next reading';
+  revealPane.classList.add('show');
+}
+
+function nextRound(){
+  revealPane.classList.remove('show');
+  idx++;
+  if(idx>=ROUNDS){ showResults(); return; }
+  presentClue();
+}
+
+function showResults(){
+  playPane.style.display='none';
+  finalN.textContent = total;
+  const pct = total/(ROUNDS*100);
+  let g,note;
+  if(pct>=0.6){ g='A fine ear for the machine.'; note='Reading after reading, your lines drove the machine where the hidden ones did. That is the skill this sheet tests: knowing, from the bets alone, what kind of sentence must have been read.'; }
+  else if(pct>=0.35){ g='Warm hands.'; note='Several lines landed in the right groove. The misses are worth studying — the machine often bets on the grammar of a line as much as its subject, and a clue full of nouns wants a line that ends just before one.'; }
+  else if(pct>=0.15){ g='Glimpses through the glass.'; note='Some of the right words surfaced, but the machine mostly went elsewhere. Watch what your lines end on: the last few words steer the bets more than anything.'; }
+  else { g='The glass stayed dark.'; note='The machine read your lines as a different world from the hidden ones. Not failure — a map of how differently a sentence can be steered by its final words.'; }
+  finalGrade.textContent = g;
+  finalNote.textContent = note;
+  breakdownEl.replaceChildren();
+  log.forEach((r,i)=>{
+    const li=document.createElement('li');
+    const l=document.createElement('span'); l.innerHTML = `${i+1}. …${r.stem.split(' ').slice(-4).join(' ')} <span class="w">${r.pts>=55?'found':'missed'}</span>`;
+    const s=document.createElement('span'); s.className='s'; s.textContent = r.pts+' pts';
+    li.appendChild(l); li.appendChild(s); breakdownEl.appendChild(li);
+  });
+  resultsPane.classList.add('show');
+}
+
+function newGame(){
+  deck = [...STEMS].sort(()=>Math.random()-0.5).slice(0, ROUNDS);
+  idx=0; total=0; log=[];
+  resultsPane.classList.remove('show');
+  revealPane.classList.remove('show');
+  presentClue();
+}
+
+playBtn.addEventListener('click', readIt);
+answerEl.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); readIt(); } });
+nextBtn.addEventListener('click', nextRound);
+againBtn.addEventListener('click', newGame);
+
+boot();
+</script>
+</body>
+</html>
